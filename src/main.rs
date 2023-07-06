@@ -22,11 +22,11 @@ async fn run_serial_link() {
         let item = MspV2Request::Request(mspv2::INAV_ANALOG);
         tokio::select! {
             _write_result = async {
-                tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
                 sender.send(item).await
             } => {},
             item = receiver.next() => {
-                println!("Item: {:?}", item);
+                println!("Item: {:#?}", item);
             }
         }
     }

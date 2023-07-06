@@ -5,12 +5,12 @@ pub(crate) enum MspV2Request {
     Request(u16),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum MspV2Response {
     InavAnalog(InavAnalogMessage),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) struct InavAnalogMessage {
     pub(crate) battery_flags: u8,
     pub(crate) battery_voltage: u16,
