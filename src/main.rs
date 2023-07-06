@@ -1,6 +1,6 @@
 mod mspv2;
 use futures::{SinkExt, StreamExt};
-use mspv2::{MspV2Codec, MspV2Message};
+use mspv2::{MspV2Codec, MspV2Request};
 use tokio_serial::SerialPortBuilderExt;
 use tokio_util::codec::Framed;
 
@@ -11,17 +11,24 @@ async fn main() {
 }
 
 async fn run_serial_link() {
-    // let port = "/dev/cu.usbserial-0001";
-    let port = "/dev/cu.usbserial-AB0JSZ6R";
+    let port = "/dev/cu.usbserial-0001";
+    // let port = "/dev/cu.usbserial-AB0JSZ6R";
     let serial = tokio_serial::new(port, 9600).open_native_async().unwrap();
 
     let codec = MspV2Codec {};
-    let (mut sender, mut _receiver) = Framed::new(serial, codec).split();
+    let (mut sender, mut receiver) = Framed::new(serial, codec).split();
 
     loop {
-        let item = MspV2Message::InavAnalog;
-        let _write_result = sender.send(item).await;
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        let item = MspV2Request::Request(mspv2::INAV_ANALOG);
+        tokio::select! {
+            _write_result = async {
+                tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;
+                sender.send(item).await
+            } => {},
+            item = receiver.next() => {
+                println!("Item: {:?}", item);
+            }
+        }
     }
 
     // loop {
