@@ -52,6 +52,7 @@ impl Decoder for MspV2Codec {
             // TODO: If the size number is really large by error, don't get stuck here
             // Instead, look for the next occurance of the header
             println!("Invalid CRC");
+            let _ = src.split_to(size + 9);
             return Ok(None);
         }
 
