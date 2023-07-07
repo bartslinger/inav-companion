@@ -10,7 +10,7 @@ pub(crate) enum MspV2Response {
     InavAnalog(InavAnalogMessage),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, serde::Deserialize)]
 pub(crate) struct InavAnalogMessage {
     pub(crate) battery_flags: u8,
     pub(crate) battery_voltage: u16,

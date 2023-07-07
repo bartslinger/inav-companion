@@ -66,19 +66,24 @@ impl Decoder for MspV2Codec {
         let payload = &data[8..];
 
         match function {
-            INAV_ANALOG => Ok(Some(MspV2Response::InavAnalog(
-                crate::mspv2::InavAnalogMessage {
-                    battery_flags: payload[0],
-                    battery_voltage: LittleEndian::read_u16(&payload[1..3]),
-                    amperage: LittleEndian::read_u16(&payload[3..5]),
-                    power: LittleEndian::read_u32(&payload[5..9]),
-                    mah_drawn: LittleEndian::read_u32(&payload[9..13]),
-                    mwh_drawn: LittleEndian::read_u32(&payload[13..17]),
-                    battery_remaining_capacity: LittleEndian::read_u32(&payload[17..21]),
-                    battery_percentage: payload[21],
-                    rssi: LittleEndian::read_u16(&payload[22..24]),
-                },
-            ))),
+            INAV_ANALOG => {
+                let cfg = bincode::config();
+                let message: crate::mspv2::InavAnalogMessage = cfg.deserialize(payload).unwrap();
+                Ok(Some(MspV2Response::InavAnalog(message)))
+                // Ok(Some(MspV2Response::InavAnalog(
+                //     crate::mspv2::InavAnalogMessage {
+                //         battery_flags: payload[0],
+                //         battery_voltage: LittleEndian::read_u16(&payload[1..3]),
+                //         amperage: LittleEndian::read_u16(&payload[3..5]),
+                //         power: LittleEndian::read_u32(&payload[5..9]),
+                //         mah_drawn: LittleEndian::read_u32(&payload[9..13]),
+                //         mwh_drawn: LittleEndian::read_u32(&payload[13..17]),
+                //         battery_remaining_capacity: LittleEndian::read_u32(&payload[17..21]),
+                //         battery_percentage: payload[21],
+                //         rssi: LittleEndian::read_u16(&payload[22..24]),
+                //     },
+                // )))
+            }
             _ => Ok(None),
         }
     }
