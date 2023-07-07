@@ -22,12 +22,21 @@ async fn run_serial_link() {
         let item = MspV2Request::Request(mspv2::INAV_ANALOG);
         tokio::select! {
             _write_result = async {
-                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-                sender.send(item).await
+                // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                sender.send(item).await.ok();
+                let resp = match tokio::time::timeout(tokio::time::Duration::from_millis(100), receiver.next()).await {
+                    Ok(v) => v,
+                    Err(_) => {
+                        println!("timeout");
+                        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+                        return}
+                };
+                // let resp = receiver.next().await;
+                println!("Item: {:#?}", resp);
             } => {},
-            item = receiver.next() => {
-                println!("Item: {:#?}", item);
-            }
+            // item = receiver.next() => {
+            //     println!("Item: {:#?}", item);
+            // }
         }
     }
 
