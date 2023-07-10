@@ -1,7 +1,7 @@
 mod mspv2;
-use futures::{SinkExt, StreamExt};
-use mspv2::{MspV2Codec, MspV2Request};
-use tokio_serial::SerialPortBuilderExt;
+use futures::{stream::SplitStream, SinkExt, StreamExt};
+use mspv2::{MspV2Codec, MspV2Request, MspV2Response};
+use tokio_serial::{SerialPortBuilderExt, SerialStream};
 use tokio_util::codec::Framed;
 
 #[tokio::main]
@@ -10,8 +10,38 @@ async fn main() {
     run_serial_link().await;
 }
 
+async fn get_response(receiver: &mut SplitStream<Framed<SerialStream, MspV2Codec>>) {
+    let _ = match tokio::time::timeout(tokio::time::Duration::from_millis(100), receiver.next())
+        .await
+    {
+        Ok(Some(Ok(v))) => {
+            match v {
+                MspV2Response::RawGps(x) => {
+                    println!("{:#?}", x);
+                }
+                MspV2Response::Altitude(x) => {
+                    println!("{:#?}", x);
+                }
+                MspV2Response::InavAnalog(x) => {
+                    println!("{:#?}", x);
+                }
+                MspV2Response::InavMisc2(x) => {
+                    println!("{:#?}", x);
+                }
+            };
+        }
+        Ok(Some(Err(_))) => {}
+        Ok(None) => {}
+        Err(_) => {
+            println!("timeout");
+            return;
+        }
+    };
+}
+
 async fn run_serial_link() {
-    let port = "/dev/cu.usbserial-0001";
+    // let port = "/dev/cu.usbserial-0001";
+    let port = "/dev/serial0";
     // let port = "/dev/cu.usbserial-AB0JSZ6R";
     let serial = tokio_serial::new(port, 9600).open_native_async().unwrap();
 
@@ -19,25 +49,32 @@ async fn run_serial_link() {
     let (mut sender, mut receiver) = Framed::new(serial, codec).split();
 
     loop {
-        let item = MspV2Request::Request(mspv2::INAV_ANALOG);
-        tokio::select! {
-            _write_result = async {
-                // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-                sender.send(item).await.ok();
-                let resp = match tokio::time::timeout(tokio::time::Duration::from_millis(100), receiver.next()).await {
-                    Ok(v) => v,
-                    Err(_) => {
-                        println!("timeout");
-                        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-                        return}
-                };
-                // let resp = receiver.next().await;
-                println!("Item: {:#?}", resp);
-            } => {},
-            // item = receiver.next() => {
-            //     println!("Item: {:#?}", item);
-            // }
-        }
+        // tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        // let item = MspV2Request::Request(mspv2::RAW_GPS);
+        // sender.send(item).await.ok();
+        println!("");
+        println!("");
+        sender
+            .send(MspV2Request::Request(mspv2::RAW_GPS))
+            .await
+            .ok();
+        get_response(&mut receiver).await;
+        sender
+            .send(MspV2Request::Request(mspv2::ALTITUDE))
+            .await
+            .ok();
+        get_response(&mut receiver).await;
+        sender
+            .send(MspV2Request::Request(mspv2::INAV_ANALOG))
+            .await
+            .ok();
+        get_response(&mut receiver).await;
+        sender
+            .send(MspV2Request::Request(mspv2::INAV_MISC2))
+            .await
+            .ok();
+        get_response(&mut receiver).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
     }
 
     // loop {

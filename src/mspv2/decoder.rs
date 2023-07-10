@@ -2,9 +2,7 @@ use byteorder::{ByteOrder, LittleEndian};
 use bytes::BytesMut;
 use tokio_util::codec::Decoder;
 
-use crate::mspv2::INAV_ANALOG;
-
-use super::{messages::MspV2Response, MspV2Codec};
+use super::{messages::MspV2Response, MspV2Codec, ALTITUDE, INAV_ANALOG, INAV_MISC2, RAW_GPS};
 
 impl Decoder for MspV2Codec {
     type Item = MspV2Response;
@@ -65,24 +63,23 @@ impl Decoder for MspV2Codec {
         // Create reference to the payload
         let payload = &data[8..];
 
+        let cfg = bincode::config();
         match function {
+            RAW_GPS => {
+                let message: crate::mspv2::RawGpsMessage = cfg.deserialize(payload).unwrap();
+                Ok(Some(MspV2Response::RawGps(message)))
+            }
+            ALTITUDE => {
+                let message: crate::mspv2::AltitudeMessage = cfg.deserialize(payload).unwrap();
+                Ok(Some(MspV2Response::Altitude(message)))
+            }
             INAV_ANALOG => {
-                let cfg = bincode::config();
                 let message: crate::mspv2::InavAnalogMessage = cfg.deserialize(payload).unwrap();
                 Ok(Some(MspV2Response::InavAnalog(message)))
-                // Ok(Some(MspV2Response::InavAnalog(
-                //     crate::mspv2::InavAnalogMessage {
-                //         battery_flags: payload[0],
-                //         battery_voltage: LittleEndian::read_u16(&payload[1..3]),
-                //         amperage: LittleEndian::read_u16(&payload[3..5]),
-                //         power: LittleEndian::read_u32(&payload[5..9]),
-                //         mah_drawn: LittleEndian::read_u32(&payload[9..13]),
-                //         mwh_drawn: LittleEndian::read_u32(&payload[13..17]),
-                //         battery_remaining_capacity: LittleEndian::read_u32(&payload[17..21]),
-                //         battery_percentage: payload[21],
-                //         rssi: LittleEndian::read_u16(&payload[22..24]),
-                //     },
-                // )))
+            }
+            INAV_MISC2 => {
+                let message: crate::mspv2::InavMisc2Message = cfg.deserialize(payload).unwrap();
+                Ok(Some(MspV2Response::InavMisc2(message)))
             }
             _ => Ok(None),
         }
