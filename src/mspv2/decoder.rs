@@ -23,7 +23,7 @@ impl Decoder for MspV2Codec {
 
         // Truncate everything up to the start index
         let rejected = src.split_to(start_index);
-        if rejected.len() > 0 {
+        if !rejected.is_empty() {
             println!("Rejected {:x?}", rejected);
         }
 
@@ -95,7 +95,7 @@ fn format_bytes(bytes: &BytesMut) -> String {
         }
         s.push_str(&format!("0x{:02x}", byte));
     }
-    s.push_str("]");
+    s.push(']');
     s
 }
 

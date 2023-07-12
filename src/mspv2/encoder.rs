@@ -25,7 +25,6 @@ impl Encoder<MspV2Request> for MspV2Codec {
         dst.extend_from_slice(b"$X<");
         dst.extend_from_slice(&data);
         dst.put_u8(crc_result);
-        // println!("dst: {:02x }", dst);
 
         Ok(())
     }

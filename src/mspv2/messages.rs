@@ -51,7 +51,7 @@ pub(crate) struct InavAnalogMessage {
 #[derive(Debug, PartialEq, serde::Deserialize)]
 pub(crate) struct InavMisc2Message {
     pub(crate) on_time: u32,
-    pub(crate) flight_time: f32,
+    pub(crate) flight_time: u32,
     pub(crate) throttle_percent: u8,
     pub(crate) auto_throttle_flag: u8,
 }
