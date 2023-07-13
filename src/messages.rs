@@ -2,7 +2,7 @@ use crate::mspv2;
 use crate::mspv2::MspV2Response;
 
 #[derive(Clone, serde::Serialize, Debug)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub(crate) enum InavMessage {
     RawGps(RawGpsMessage),
     Altitude(AltitudeMessage),
@@ -22,7 +22,6 @@ impl From<MspV2Response> for InavMessage {
 }
 
 #[derive(Clone, serde::Serialize, Debug)]
-#[serde(tag = "type", rename_all = "camelCase")]
 pub(crate) struct RawGpsMessage {
     fix_type: GpsFixType,
     satellites: u8,
@@ -68,7 +67,6 @@ impl From<mspv2::RawGpsMessage> for RawGpsMessage {
 }
 
 #[derive(Clone, serde::Serialize, Debug)]
-#[serde(tag = "type", rename_all = "camelCase")]
 pub(crate) struct AltitudeMessage {
     estimated_z_position: f32,
     estimated_z_velocity: f32,
@@ -85,7 +83,6 @@ impl From<mspv2::AltitudeMessage> for AltitudeMessage {
 }
 
 #[derive(Clone, serde::Serialize, Debug)]
-#[serde(tag = "type", rename_all = "camelCase")]
 pub(crate) struct InavAnalogMessage {
     battery_voltage: f32,
     amperage: f32,
@@ -107,7 +104,6 @@ impl From<mspv2::InavAnalogMessage> for InavAnalogMessage {
 }
 
 #[derive(Clone, serde::Serialize, Debug)]
-#[serde(tag = "type", rename_all = "camelCase")]
 pub(crate) struct InavMisc2Message {
     on_time: u32,
     flight_time: u32,
