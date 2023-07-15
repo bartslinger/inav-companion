@@ -2,6 +2,23 @@ use crate::mspv2;
 use crate::mspv2::MspV2Response;
 
 #[derive(Clone, serde::Serialize, Debug)]
+pub(crate) struct TimestampedInavMessage {
+    pub(crate) ts: i64,
+    #[serde(flatten)]
+    pub(crate) msg: InavMessage,
+}
+
+impl From<MspV2Response> for TimestampedInavMessage {
+    fn from(value: MspV2Response) -> Self {
+        let now = chrono::Utc::now();
+        Self {
+            ts: now.timestamp_millis(),
+            msg: value.into(),
+        }
+    }
+}
+
+#[derive(Clone, serde::Serialize, Debug)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub(crate) enum InavMessage {
     RawGps(RawGpsMessage),

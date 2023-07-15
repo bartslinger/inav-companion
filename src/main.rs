@@ -2,7 +2,7 @@ mod messages;
 mod mspv2;
 mod webserver;
 
-use crate::messages::InavMessage;
+use crate::messages::{InavMessage, TimestampedInavMessage};
 use crate::webserver::run_webserver;
 use futures::{stream::SplitStream, SinkExt, StreamExt};
 use mspv2::{MspV2Codec, MspV2Request, MspV2Response};
@@ -57,7 +57,9 @@ async fn get_response(
     }
 }
 
-async fn run_serial_link(broadcast_channel: tokio::sync::broadcast::Sender<InavMessage>) {
+async fn run_serial_link(
+    broadcast_channel: tokio::sync::broadcast::Sender<TimestampedInavMessage>,
+) {
     // let port = "/dev/cu.usbserial-0001";
     let port = "/dev/serial0";
     // let port = "/dev/cu.usbserial-AB0JSZ6R";

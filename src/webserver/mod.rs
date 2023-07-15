@@ -1,4 +1,4 @@
-use crate::messages::InavMessage;
+use crate::messages::TimestampedInavMessage;
 use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{State, WebSocketUpgrade};
 use axum::http::StatusCode;
@@ -8,11 +8,11 @@ use axum::{headers, Router, TypedHeader};
 use std::sync::Arc;
 
 pub(crate) struct AppState {
-    broadcast_channel: tokio::sync::broadcast::Receiver<InavMessage>,
+    broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
 }
 
 pub(crate) async fn run_webserver(
-    broadcast_channel: tokio::sync::broadcast::Receiver<InavMessage>,
+    broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
 ) {
     let app_state = Arc::new(AppState { broadcast_channel });
 
@@ -51,7 +51,7 @@ async fn ws_handler(
 
 async fn handle_socket(
     mut socket: WebSocket,
-    mut broadcast_channel: tokio::sync::broadcast::Receiver<InavMessage>,
+    mut broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
 ) {
     while let Ok(message) = broadcast_channel.recv().await {
         if let Ok(text) = serde_json::to_string(&message) {
