@@ -1,4 +1,4 @@
-use crate::messages::{IncomingWebsocketMessage, TimestampedInavMessage};
+use crate::messages::{IncomingWebsocketMessage, SetRawRcMessage, TimestampedInavMessage};
 use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{State, WebSocketUpgrade};
 use axum::http::StatusCode;
@@ -10,12 +10,17 @@ use std::sync::Arc;
 
 pub(crate) struct AppState {
     broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
+    raw_rc_channel_tx: tokio::sync::mpsc::Sender<SetRawRcMessage>,
 }
 
 pub(crate) async fn run_webserver(
     broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
+    raw_rc_channel_tx: tokio::sync::mpsc::Sender<SetRawRcMessage>,
 ) {
-    let app_state = Arc::new(AppState { broadcast_channel });
+    let app_state = Arc::new(AppState {
+        broadcast_channel,
+        raw_rc_channel_tx,
+    });
 
     let app = Router::new()
         .route("/ws", get(ws_handler))
@@ -47,12 +52,14 @@ async fn ws_handler(
     // finalize the upgrade process by returning upgrade callback.
     // we can customize the callback by sending additional info such as address.
     let broadcast_channel = state.broadcast_channel.resubscribe();
-    ws.on_upgrade(move |socket| handle_socket(socket, broadcast_channel))
+    let raw_rc_channel_tx = state.raw_rc_channel_tx.clone();
+    ws.on_upgrade(move |socket| handle_socket(socket, broadcast_channel, raw_rc_channel_tx))
 }
 
 async fn handle_socket(
     socket: WebSocket,
     mut broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
+    mut raw_rc_channel_tx: tokio::sync::mpsc::Sender<SetRawRcMessage>,
 ) {
     let (mut socket_sender, mut socket_receiver) = socket.split();
 
@@ -70,7 +77,9 @@ async fn handle_socket(
                 Message::Text(content) => {
                     let message =
                         serde_json::from_str::<IncomingWebsocketMessage>(content.as_str());
-                    println!("Incoming: {:?}", message);
+                    if let Ok(IncomingWebsocketMessage::SetRawRc(value)) = message {
+                        let send_result = raw_rc_channel_tx.try_send(value);
+                    }
                 }
                 Message::Close(_) => break,
                 _ => {}
