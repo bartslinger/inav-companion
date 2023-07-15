@@ -1,3 +1,4 @@
+use crate::mspv2::SET_RAW_RC;
 use byteorder::{LittleEndian, WriteBytesExt};
 use bytes::{BufMut, BytesMut};
 use tokio_util::codec::Encoder;
@@ -14,6 +15,14 @@ impl Encoder<MspV2Request> for MspV2Codec {
             MspV2Request::Request(function) => {
                 data.write_u16::<LittleEndian>(function).unwrap();
                 data.write_u16::<LittleEndian>(0).unwrap();
+            }
+            MspV2Request::SetRawRc(channels) => {
+                data.write_u16::<LittleEndian>(SET_RAW_RC).unwrap();
+                data.write_u16::<LittleEndian>(2 * channels.len() as u16)
+                    .unwrap();
+                channels.iter().for_each(|channel| {
+                    data.write_u16::<LittleEndian>(*channel).unwrap();
+                })
             }
         }
 

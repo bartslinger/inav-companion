@@ -3,9 +3,12 @@ pub const ALTITUDE: u16 = 109;
 pub const INAV_ANALOG: u16 = 0x2002;
 pub const INAV_MISC2: u16 = 0x203A;
 
+pub const SET_RAW_RC: u16 = 200;
+
 #[derive(Debug)]
 pub(crate) enum MspV2Request {
     Request(u16),
+    SetRawRc([u16; 4]), // Could be up to 18, but we don't use all
 }
 
 #[derive(Debug, PartialEq)]

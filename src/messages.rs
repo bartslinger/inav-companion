@@ -21,6 +21,7 @@ impl From<MspV2Response> for TimestampedInavMessage {
 #[derive(Clone, serde::Serialize, Debug)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub(crate) enum InavMessage {
+    // Outgoing (to browser)
     RawGps(RawGpsMessage),
     Altitude(AltitudeMessage),
     InavAnalog(InavAnalogMessage),
@@ -137,4 +138,16 @@ impl From<mspv2::InavMisc2Message> for InavMisc2Message {
             auto_throttle_flag: value.auto_throttle_flag == 1,
         }
     }
+}
+
+#[derive(Clone, serde::Deserialize, Debug)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub(crate) enum IncomingWebsocketMessage {
+    SetRawRc(SetRawRcMessage),
+}
+
+#[derive(Clone, serde::Deserialize, Debug)]
+pub(crate) struct SetRawRcMessage {
+    ts: i64,
+    channels: [u16; 4],
 }

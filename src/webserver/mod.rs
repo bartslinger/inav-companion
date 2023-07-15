@@ -1,10 +1,11 @@
-use crate::messages::TimestampedInavMessage;
+use crate::messages::{IncomingWebsocketMessage, TimestampedInavMessage};
 use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{State, WebSocketUpgrade};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::{headers, Router, TypedHeader};
+use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 
 pub(crate) struct AppState {
@@ -50,12 +51,35 @@ async fn ws_handler(
 }
 
 async fn handle_socket(
-    mut socket: WebSocket,
+    socket: WebSocket,
     mut broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
 ) {
-    while let Ok(message) = broadcast_channel.recv().await {
-        if let Ok(text) = serde_json::to_string(&message) {
-            let send_result = socket.send(Message::Text(text)).await;
+    let (mut socket_sender, mut socket_receiver) = socket.split();
+
+    let send_task = async move {
+        while let Ok(message) = broadcast_channel.recv().await {
+            if let Ok(text) = serde_json::to_string(&message) {
+                let send_result = socket_sender.send(Message::Text(text)).await;
+            }
         }
+    };
+
+    let receive_task = async move {
+        while let Some(Ok(incoming)) = socket_receiver.next().await {
+            match incoming {
+                Message::Text(content) => {
+                    let message =
+                        serde_json::from_str::<IncomingWebsocketMessage>(content.as_str());
+                    println!("Incoming: {:?}", message);
+                }
+                Message::Close(_) => break,
+                _ => {}
+            }
+        }
+    };
+
+    tokio::select! {
+        _ = send_task => {},
+        _ = receive_task => {},
     }
 }
