@@ -17,6 +17,7 @@ pub(crate) enum MspV2Response {
     Altitude(AltitudeMessage),
     InavAnalog(InavAnalogMessage),
     InavMisc2(InavMisc2Message),
+    SetRawRcAck,
 }
 
 #[derive(Debug, PartialEq, Eq, serde::Deserialize)]

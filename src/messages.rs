@@ -26,6 +26,7 @@ pub(crate) enum InavMessage {
     Altitude(AltitudeMessage),
     InavAnalog(InavAnalogMessage),
     InavMisc2(InavMisc2Message),
+    Ack,
 }
 
 impl From<MspV2Response> for InavMessage {
@@ -35,6 +36,7 @@ impl From<MspV2Response> for InavMessage {
             MspV2Response::Altitude(v) => InavMessage::Altitude(v.into()),
             MspV2Response::InavAnalog(v) => InavMessage::InavAnalog(v.into()),
             MspV2Response::InavMisc2(v) => InavMessage::InavMisc2(v.into()),
+            MspV2Response::SetRawRcAck => InavMessage::Ack,
         }
     }
 }

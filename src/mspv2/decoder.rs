@@ -2,7 +2,9 @@ use byteorder::{ByteOrder, LittleEndian};
 use bytes::BytesMut;
 use tokio_util::codec::Decoder;
 
-use super::{messages::MspV2Response, MspV2Codec, ALTITUDE, INAV_ANALOG, INAV_MISC2, RAW_GPS};
+use super::{
+    messages::MspV2Response, MspV2Codec, ALTITUDE, INAV_ANALOG, INAV_MISC2, RAW_GPS, SET_RAW_RC,
+};
 
 impl Decoder for MspV2Codec {
     type Item = MspV2Response;
@@ -81,6 +83,7 @@ impl Decoder for MspV2Codec {
                 let message: crate::mspv2::InavMisc2Message = cfg.deserialize(payload).unwrap();
                 Ok(Some(MspV2Response::InavMisc2(message)))
             }
+            SET_RAW_RC => Ok(Some(MspV2Response::SetRawRcAck)),
             _ => Ok(None),
         }
     }
