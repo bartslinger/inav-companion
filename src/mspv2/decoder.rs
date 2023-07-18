@@ -65,22 +65,23 @@ impl Decoder for MspV2Codec {
         // Create reference to the payload
         let payload = &data[8..];
 
-        let cfg = bincode::config();
         match function {
             RAW_GPS => {
-                let message: crate::mspv2::RawGpsMessage = cfg.deserialize(payload).unwrap();
+                let message: crate::mspv2::RawGpsMessage = bincode::deserialize(payload).unwrap();
                 Ok(Some(MspV2Response::RawGps(message)))
             }
             ALTITUDE => {
-                let message: crate::mspv2::AltitudeMessage = cfg.deserialize(payload).unwrap();
+                let message: crate::mspv2::AltitudeMessage = bincode::deserialize(payload).unwrap();
                 Ok(Some(MspV2Response::Altitude(message)))
             }
             INAV_ANALOG => {
-                let message: crate::mspv2::InavAnalogMessage = cfg.deserialize(payload).unwrap();
+                let message: crate::mspv2::InavAnalogMessage =
+                    bincode::deserialize(payload).unwrap();
                 Ok(Some(MspV2Response::InavAnalog(message)))
             }
             INAV_MISC2 => {
-                let message: crate::mspv2::InavMisc2Message = cfg.deserialize(payload).unwrap();
+                let message: crate::mspv2::InavMisc2Message =
+                    bincode::deserialize(payload).unwrap();
                 Ok(Some(MspV2Response::InavMisc2(message)))
             }
             SET_RAW_RC => Ok(Some(MspV2Response::SetRawRcAck)),
