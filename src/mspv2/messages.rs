@@ -8,7 +8,7 @@ pub const SET_RAW_RC: u16 = 200;
 #[derive(Debug)]
 pub(crate) enum MspV2Request {
     Request(u16),
-    SetRawRc([u16; 4]), // Could be up to 18, but we don't use all
+    SetRawRc([u16; 5]), // Could be up to 18, but we don't use all
 }
 
 #[derive(Debug, PartialEq)]

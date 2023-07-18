@@ -151,5 +151,5 @@ pub(crate) enum IncomingWebsocketMessage {
 #[derive(Clone, serde::Deserialize, Debug)]
 pub(crate) struct SetRawRcMessage {
     pub(crate) ts: i64,
-    pub(crate) channels: [u16; 4],
+    pub(crate) channels: [u16; 5],
 }

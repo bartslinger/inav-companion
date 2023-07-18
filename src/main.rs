@@ -19,7 +19,7 @@ async fn main() {
     let (raw_rc_mpsc_tx, mut raw_rc_mpsc_rx) = tokio::sync::mpsc::channel(10);
     let (raw_rc_watch_tx, raw_rc_watch_rx) = tokio::sync::watch::channel(SetRawRcMessage {
         ts: 0,
-        channels: [1500, 1500, 1000, 1500],
+        channels: [1500, 1500, 1000, 1500, 1500],
     });
 
     // This aggregator takes values from multiple websocket connections and presents the latest
@@ -83,8 +83,8 @@ async fn run_serial_link(
     broadcast_channel: tokio::sync::broadcast::Sender<TimestampedInavMessage>,
     mut raw_rc_channel_rx: tokio::sync::watch::Receiver<SetRawRcMessage>,
 ) {
-    let port = "/dev/cu.usbserial-0001";
-    // let port = "/dev/serial0";
+    // let port = "/dev/cu.usbserial-0001";
+    let port = "/dev/serial0";
     // let port = "/dev/cu.usbserial-AB0JSZ6R";
     let serial = tokio_serial::new(port, 9600).open_native_async().unwrap();
 
@@ -129,6 +129,7 @@ async fn run_serial_link(
                         current_value.channels[1],
                         current_value.channels[2],
                         current_value.channels[3],
+                        current_value.channels[4],
                     ]))
                     .await
                     .ok();
