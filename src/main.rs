@@ -65,7 +65,7 @@ async fn get_response(
                     println!("{:#?}", x);
                 }
                 MspV2Response::SetRawRcAck => {
-                    println!("SetRawRc ACK");
+                    // println!("SetRawRc ACK");
                 }
             };
             Ok(v)
@@ -106,30 +106,38 @@ async fn run_serial_link(
             tokio::select! {
                 _ = raw_rc_channel_rx.changed() => {
                     raw_rc_changed_trigger = true;
-                    println!("x changed");
+                    // println!("x changed");
                 },
                 _ = telemetry_interval.tick() => {
-                    println!("+ tick");
+                    // println!("+ tick");
                 }
             }
         }
 
         if raw_rc_changed_trigger || raw_rc_channel_rx.has_changed().ok() == Some(true) {
-            println!("* rc changed");
+            // println!("* rc changed");
             let current_value = raw_rc_channel_rx.borrow_and_update().clone();
-            sender
-                .send(MspV2Request::SetRawRc([
-                    current_value.channels[0],
-                    current_value.channels[1],
-                    current_value.channels[2],
-                    current_value.channels[3],
-                ]))
-                .await
-                .ok();
+            // Make sure the timestamp is not too old
+            let now = chrono::Utc::now().timestamp_millis();
+            let age = now - current_value.ts;
+            if !(-500..=2000).contains(&age) {
+                println!("raw rc age out of range {}", age);
+            } else {
+                sender
+                    .send(MspV2Request::SetRawRc([
+                        current_value.channels[0],
+                        current_value.channels[1],
+                        current_value.channels[2],
+                        current_value.channels[3],
+                    ]))
+                    .await
+                    .ok();
+                let _ = get_response(&mut receiver).await;
+            }
         } else {
             // Do 1 non-RC transaction
             if let Some(request) = telemetry.get(x) {
-                println!("# {}", x);
+                // println!("# {}", x);
                 sender.send(MspV2Request::Request(*request)).await.ok();
             }
             if let Ok(v) = get_response(&mut receiver).await {
@@ -137,7 +145,7 @@ async fn run_serial_link(
                 match inav_message.msg {
                     InavMessage::Ack => {}
                     _ => {
-                        let send_result = broadcast_channel.send(inav_message);
+                        let _send_result = broadcast_channel.send(inav_message);
                     }
                 }
             }

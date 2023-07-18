@@ -43,7 +43,7 @@ async fn ws_handler(
 ) -> impl IntoResponse {
     println!("HOI");
     // println!("{:?}", state.test);
-    let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
+    let _user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
         user_agent.to_string()
     } else {
         String::from("Unknown browser")
@@ -59,14 +59,14 @@ async fn ws_handler(
 async fn handle_socket(
     socket: WebSocket,
     mut broadcast_channel: tokio::sync::broadcast::Receiver<TimestampedInavMessage>,
-    mut raw_rc_channel_tx: tokio::sync::mpsc::Sender<SetRawRcMessage>,
+    raw_rc_channel_tx: tokio::sync::mpsc::Sender<SetRawRcMessage>,
 ) {
     let (mut socket_sender, mut socket_receiver) = socket.split();
 
     let send_task = async move {
         while let Ok(message) = broadcast_channel.recv().await {
             if let Ok(text) = serde_json::to_string(&message) {
-                let send_result = socket_sender.send(Message::Text(text)).await;
+                let _send_result = socket_sender.send(Message::Text(text)).await;
             }
         }
     };
@@ -78,7 +78,7 @@ async fn handle_socket(
                     let message =
                         serde_json::from_str::<IncomingWebsocketMessage>(content.as_str());
                     if let Ok(IncomingWebsocketMessage::SetRawRc(value)) = message {
-                        let send_result = raw_rc_channel_tx.try_send(value);
+                        let _send_result = raw_rc_channel_tx.try_send(value);
                     }
                 }
                 Message::Close(_) => break,

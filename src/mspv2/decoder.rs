@@ -89,6 +89,7 @@ impl Decoder for MspV2Codec {
     }
 }
 
+#[allow(dead_code)]
 fn format_bytes(bytes: &BytesMut) -> String {
     let mut s = String::new();
     s.push_str("&[");
